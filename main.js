@@ -101,7 +101,7 @@ function notifyNewProduct(product) {
 }
 
 async function checkForNewProducts() {
-  console.log('Checking for new products...');
+  console.log('\nChecking for new products...');
   const currentProducts = await fetchProducts();
   const cachedProducts = loadCache();
 
@@ -109,14 +109,14 @@ async function checkForNewProducts() {
     !cachedProducts.some(cachedProduct => cachedProduct.name === product.name)
   );
 
-  console.log(`Total products on the page: ${currentProducts.length}`);
-  console.log(`Total products in the cache: ${cachedProducts.length}`);
-  console.log(`New products detected: ${newProducts.length}`);
-
   newProducts.forEach(product => {
     product.cachedTime = new Date().toISOString();
     notifyNewProduct(product);
   });
+
+  console.log(`Total products on the page: ${currentProducts.length}`);
+  console.log(`Total products in the cache: ${cachedProducts.length}`);
+  console.log(`New products detected: ${newProducts.length}`);
 
   if (newProducts.length > 0) {
     saveCache([...cachedProducts, ...newProducts]);
