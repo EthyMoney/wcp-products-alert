@@ -1,0 +1,24 @@
+{
+  "generalSettings": {
+    "updateIntervalSeconds": 60,
+    "enableBusinessHoursSleepMode": true,
+    "skipStartupAlerts": false,
+    "onlyNotifyOfKeywordMatches": false
+  },
+  "discord": {
+    "enableBot": false,
+    "token": "",
+    "serverID": "",
+    "channelName": ""
+  },
+  "slack": {
+    "enableBot": false,
+    "token": "",
+    "channelName": ""
+  },
+  "productWatchKeywords": [
+    "radio",
+    "VH",
+    "field"
+  ]
+}

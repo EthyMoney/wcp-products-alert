@@ -1,0 +1,21 @@
+{
+  "name": "wcp-bot",
+  "version": "1.0.0",
+  "description": "Bot for monitoring WCP for new product listings",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wcp",
+    "west",
+    "coast",
+    "products",
+    "frc"
+  ],
+  "author": "Logan (EthyMoney)",
+  "license": "MIT",
+  "dependencies": {
+    "jsdom": "^25.0.1"
+  }
+}
