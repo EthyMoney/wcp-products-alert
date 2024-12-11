@@ -199,7 +199,7 @@ if (loadCache().length === 0) {
     }
   });
 }
-setInterval(checkForNewProducts, 60000); // Check every 1 minute
+setInterval(checkForNewProducts, 180000); // Check every 3 minutes
 checkForNewProducts(); // Initial check
 
 // send test message to slack
