@@ -12,9 +12,9 @@
     "channelName": ""
   },
   "slack": {
-    "enableBot": false,
     "token": "",
-    "channelName": ""
+    "enableBot": true,
+    "channelName": "product-alerts"
   },
   "productWatchKeywords": [
     "radio",

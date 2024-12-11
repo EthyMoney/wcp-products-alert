@@ -14,10 +14,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { JSDOM } = require('jsdom');
+const axios = require('axios');
 
 const URL = 'https://wcproducts.com/collections/new-products';
 const CACHE_FILE = path.join(__dirname, 'product_cache.json');
 const IMAGES_DIR = path.join(__dirname, 'images');
+const config = require('./config.json');
 
 // Ensure the images directory exists
 if (!fs.existsSync(IMAGES_DIR)) {
@@ -42,7 +44,7 @@ async function fetchProducts() {
     for (let i = 0; i < totalProducts; i++) {
       const element = productElements[i];
       const name = element.querySelector('div:nth-child(1) > div:nth-child(2) > h2:nth-child(1) > a:nth-child(1)').textContent.trim();
-      const productPage = 'https://wcproducts.com/collections' + element.querySelector('div:nth-child(1) > div:nth-child(2) > h2:nth-child(1) > a:nth-child(1)').href;
+      const productPage = 'https://wcproducts.com' + element.querySelector('div:nth-child(1) > div:nth-child(2) > h2:nth-child(1) > a:nth-child(1)').href;
       let imageUrl = 'https:' + element.querySelector('div:nth-child(1) > div:nth-child(1) > a:nth-child(1) > span:nth-child(1) > img:nth-child(1)').getAttribute('data-mainimage');
       const price = element.querySelector('div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1) > span:nth-child(1)').textContent.trim();
 
@@ -68,7 +70,7 @@ async function fetchProducts() {
         imageId = cachedProduct.imageId;
       }
 
-      products.push({ name, productPage, imageId, price });
+      products.push({ name, productPage, imageId, imageUrl, price });
 
       // Display progress
       process.stdout.write(`Checked ${i + 1} of ${totalProducts} products\r`);
@@ -98,6 +100,7 @@ function saveCache(products) {
 
 function notifyNewProduct(product) {
   console.log('New product detected:', product);
+  sendToSlack(product.name, product.price, product.productPage, product.imageUrl);
 }
 
 async function checkForNewProducts() {
@@ -109,10 +112,16 @@ async function checkForNewProducts() {
     !cachedProducts.some(cachedProduct => cachedProduct.name === product.name)
   );
 
-  newProducts.forEach(product => {
-    product.cachedTime = new Date().toISOString();
-    notifyNewProduct(product);
-  });
+  // only send if the cache was not empty (don't want to flood with evert product on the first ever run)
+  if (cachedProducts.length > 0) {
+    newProducts.forEach(product => {
+      product.cachedTime = new Date().toISOString();
+      notifyNewProduct(product);
+    });
+  }
+  else {
+    console.log('Cache is empty, not sending notifications on first run to avoid spamming. Check as normal going forward.');
+  }
 
   console.log(`Total products on the page: ${currentProducts.length}`);
   console.log(`Total products in the cache: ${cachedProducts.length}`);
@@ -123,5 +132,75 @@ async function checkForNewProducts() {
   }
 }
 
+async function sendToSlack(newProductName, newProductPrice, newProductLink, newProductImageUrl) {
+  if (config.slack?.enableBot === false) {
+    console.log('Slack bot is disabled in the config, not sending notification.');
+    return;
+  }
+  console.log('Sending new product notification to Slack...');
+  const url = 'https://slack.com/api/chat.postMessage';
+  const authorizationHeader = { headers: { authorization: `Bearer ${config.slack.token}` } };
+
+  const message = {
+    channel: config.slack.channelName,
+    username: 'West Coast Products Alerts',
+    unfurl_links: false,
+    unfurl_media: false,
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `🚨 *New product detected!* 🚨`
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Product:*\n<${newProductLink}|${newProductName}>`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Price:*\n${newProductPrice}`
+          }
+        ],
+        accessory: {
+          type: 'image',
+          image_url: newProductImageUrl,
+          alt_text: newProductName
+        }
+      }
+    ]
+  };
+
+  await axios.post(url, message, authorizationHeader)
+    .then(() => {
+      console.log(`Successfully sent notification to Slack!`);
+    })
+    .catch(function (reject) {
+      console.error(`Error sending notification to Slack with promise rejection: ${reject}`);
+    });
+}
+
+// ================================
+//             Startup
+// ================================
+
+// if products cache is empty, clean out the images folder so there's nothing leftover in there and we start fresh
+if (loadCache().length === 0) {
+  fs.readdir(IMAGES_DIR, (err, files) => {
+    if (err) throw err;
+    for (const file of files) {
+      fs.unlink(path.join(IMAGES_DIR, file), err => {
+        if (err) throw err;
+      });
+    }
+  });
+}
 setInterval(checkForNewProducts, 60000); // Check every 1 minute
 checkForNewProducts(); // Initial check
+
+// send test message to slack
+sendToSlack('TEST - TalonFX stuff', '$100', 'https://wcproducts.com/collections/new-products/products/talonfxs-motor-controller-and-motors', 'https://wcproducts.com/cdn/shop/files/TalonFXS_145x.png');

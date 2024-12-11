@@ -16,6 +16,7 @@
   "author": "Logan (EthyMoney)",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.7.9",
     "jsdom": "^25.0.1"
   }
 }
