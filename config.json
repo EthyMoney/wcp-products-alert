@@ -12,8 +12,8 @@
     "channelName": ""
   },
   "slack": {
-    "token": "",
     "enableBot": true,
+    "token": "",
     "channelName": "product-alerts"
   },
   "productWatchKeywords": [
