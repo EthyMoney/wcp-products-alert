@@ -202,5 +202,5 @@ if (loadCache().length === 0) {
 setInterval(checkForNewProducts, 180000); // Check every 3 minutes
 checkForNewProducts(); // Initial check
 
-// send test message to slack
-sendToSlack('TEST - TalonFX stuff', '$100', 'https://wcproducts.com/collections/new-products/products/talonfxs-motor-controller-and-motors', 'https://wcproducts.com/cdn/shop/files/TalonFXS_145x.png');
+// send test message to slack - uncomment to use
+//sendToSlack('TEST - TalonFX stuff', '$100', 'https://wcproducts.com/collections/new-products/products/talonfxs-motor-controller-and-motors', 'https://wcproducts.com/cdn/shop/files/TalonFXS_145x.png');
